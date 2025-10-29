@@ -1,5 +1,11 @@
 # ts-ast-utils
 
+## 0.0.3
+
+### Patch Changes
+
+- c10154b: add arguments parsing to extractFunctionCalls
+
 ## 0.0.2
 
 ### Patch Changes
