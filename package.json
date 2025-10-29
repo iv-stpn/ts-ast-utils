@@ -1,6 +1,6 @@
 {
 	"name": "ts-ast-utils",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "TypeScript AST parsing utilities for extracting and analyzing TypeScript code",
 	"main": "dist/index.js",
 	"module": "dist/index.mjs",
