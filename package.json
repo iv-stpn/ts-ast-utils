@@ -1,0 +1,57 @@
+{
+	"name": "ts-ast-utilities",
+	"version": "0.0.1",
+	"description": "TypeScript AST parsing utilities for extracting and analyzing TypeScript code",
+	"main": "dist/index.js",
+	"module": "dist/index.mjs",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.mjs",
+			"require": "./dist/index.js"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsup src/index.ts --format cjs,esm --dts",
+		"dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+		"test": "bun test",
+		"test:watch": "bun test --watch",
+		"test:coverage": "bun test --coverage",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write .",
+		"changeset": "changeset",
+		"version": "changeset version",
+		"release": "changeset publish"
+	},
+	"keywords": [
+		"typescript",
+		"ast",
+		"parsing",
+		"utilities",
+		"code-analysis"
+	],
+	"author": "",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/your-username/ts-ast-utilities.git"
+	},
+	"bugs": {
+		"url": "https://github.com/your-username/ts-ast-utilities/issues"
+	},
+	"homepage": "https://github.com/your-username/ts-ast-utilities#readme",
+	"peerDependencies": {
+		"typescript": ">=4.0.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.2.4",
+		"@changesets/cli": "^2",
+		"@types/bun": "latest",
+		"tsup": "^8",
+		"typescript": "^5"
+	}
+}

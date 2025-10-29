@@ -1,0 +1,20 @@
+[test]
+# Test configuration for Bun
+preload = ["./test/setup.ts"]
+timeout = "30s"
+
+# Test file patterns
+test = ["test/**/*.test.ts"]
+
+# Coverage settings
+coverage = true
+coverageDir = "test/coverage"
+
+# TypeScript configuration
+[install]
+# Use exact versions for dependencies
+exact = true
+
+[build]
+# Build configuration
+target = "bun"
