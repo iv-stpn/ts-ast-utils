@@ -10,6 +10,7 @@ import * as ts from "typescript";
  */
 export interface FunctionCallResult {
 	name: string;
+	arguments: ts.NodeArray<ts.Expression>;
 	node: ts.CallExpression;
 	isExported: boolean;
 }
@@ -31,6 +32,7 @@ export function extractFunctionCalls(sourceFile: ts.SourceFile, functionNames: s
 				if (functionNames.includes(functionName)) {
 					calls.push({
 						name: functionName,
+						arguments: node.expression.arguments,
 						node: node.expression,
 						isExported: true,
 					});
@@ -44,6 +46,7 @@ export function extractFunctionCalls(sourceFile: ts.SourceFile, functionNames: s
 			if (functionNames.includes(functionName)) {
 				calls.push({
 					name: functionName,
+					arguments: node.arguments,
 					node,
 					isExported: false,
 				});

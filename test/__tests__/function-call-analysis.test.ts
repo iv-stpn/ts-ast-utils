@@ -215,18 +215,26 @@ describe("Function Call Analysis", () => {
 			expect(setupCalls.length).toBeGreaterThan(0);
 			expect(fakeCalls.length).toBe(0);
 		});
+	});
 
-		test("should handle function calls with complex arguments", () => {
-			const filePath = path.join(examplesPath, "basic-calls.ts");
-			const sourceFile = createSourceFileFromPath(filePath);
+	describe("Literal Value Extraction", () => {
+		let sourceFile: ts.SourceFile;
+		let functionCalls: FunctionCallResult[];
 
-			const result = extractFunctionCalls(sourceFile, ["processData"]);
-			expect(result.length).toBeGreaterThan(0);
+		beforeAll(() => {
+			const filePath = path.join(examplesPath, "literal-values.ts");
+			sourceFile = createSourceFileFromPath(filePath);
 
-			// Should have valid call expression nodes even with complex arguments
-			result.forEach((call) => {
-				expect(call.node.arguments).toBeDefined();
-			});
+			const targetFunctions = ["testFunction", "mixedFunction", "runTests"];
+			functionCalls = extractFunctionCalls(sourceFile, targetFunctions);
+		});
+
+		test("should handle export default function calls with literals", () => {
+			const exportedCalls = functionCalls.filter((call) => call.isExported);
+			expect(exportedCalls.length).toBe(1);
+
+			const exportCall = exportedCalls[0];
+			expect(exportCall.name).toBe("runTests");
 		});
 	});
 
