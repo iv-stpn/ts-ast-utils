@@ -1,5 +1,11 @@
 # ts-ast-utils
 
+## 0.0.4
+
+### Patch Changes
+
+- 982fad6: simplify import \* as ts to import ts, remove unused FunctionCallInfo types
+
 ## 0.0.3
 
 ### Patch Changes
