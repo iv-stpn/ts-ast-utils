@@ -3,7 +3,7 @@
  */
 
 import * as ts from "typescript";
-import { getLiteralValue, getArrayLiteralValues } from "../core/node-extraction.js";
+import { getArrayLiteralValues, getLiteralValue } from "../core/node-extraction.js";
 import type { PropertyInfo } from "../core/types.js";
 
 /**

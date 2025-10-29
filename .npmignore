@@ -1,0 +1,39 @@
+# Source files
+src/
+test/
+
+# Development files
+*.test.ts
+*.spec.ts
+.DS_Store
+.env*
+
+# Build configuration
+tsconfig*.json
+biome.json
+bun.lockb
+
+# Development dependencies
+node_modules/
+
+# CI/CD
+.github/
+
+# Documentation (keep README.md)
+docs/
+
+# Changeset files (keep for publishing)
+# .changeset/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Docker
+docker-compose.yml
+Dockerfile*

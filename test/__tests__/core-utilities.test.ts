@@ -7,8 +7,8 @@ import { beforeAll, describe, expect, test } from "bun:test";
 import * as path from "node:path";
 import * as ts from "typescript";
 import {
-	createSourceFileFromPath,
 	createSourceFileFromContent,
+	createSourceFileFromPath,
 	findFirstNode,
 	findNodes,
 	getArrayLiteralValues,
@@ -301,7 +301,7 @@ const variableName = "test";
 		let sourceFile: ts.SourceFile;
 
 		beforeAll(() => {
-			const filePath = path.join(examplesPath, "position-utilities.ts");
+			const filePath = path.join(examplesPath, "position-utils.ts");
 			sourceFile = createSourceFileFromPath(filePath);
 		});
 

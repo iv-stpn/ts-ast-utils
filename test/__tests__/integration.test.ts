@@ -303,7 +303,7 @@ describe("Integration Tests", () => {
 
 	describe("Library Feature Combinations", () => {
 		test("should combine position and analysis features", () => {
-			const filePath = path.join(examplesPath, "core", "position-utilities.ts");
+			const filePath = path.join(examplesPath, "core", "position-utils.ts");
 			const sourceFile = createSourceFileFromPath(filePath);
 
 			// Find functions and get their positions

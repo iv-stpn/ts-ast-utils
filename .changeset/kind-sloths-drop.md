@@ -1,5 +1,5 @@
 ---
-"ts-ast-utilities": patch
+"ts-ast-utils": patch
 ---
 
 Initial commit

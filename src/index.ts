@@ -1,5 +1,5 @@
 /**
- * Main entry point for ts-ast-utilities
+ * Main entry point for ts-ast-utils
  * A modern, modular TypeScript AST parsing library
  *
  * Features:
