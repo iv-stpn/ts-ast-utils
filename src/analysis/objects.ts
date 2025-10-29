@@ -2,7 +2,7 @@
  * Object property analysis utilities
  */
 
-import * as ts from "typescript";
+import ts from "typescript";
 import { getArrayLiteralValues, getLiteralValue } from "../core/node-extraction.js";
 import type { PropertyInfo } from "../core/types.js";
 

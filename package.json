@@ -24,6 +24,8 @@
 		"typecheck": "tsc --noEmit --pretty",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
+		"knip": "bunx knip",
+		"ts-prune": "bunx ts-prune --project tsconfig.json",
 		"changeset": "changeset",
 		"changeset:version": "changeset version",
 		"changeset:publish": "changeset publish",

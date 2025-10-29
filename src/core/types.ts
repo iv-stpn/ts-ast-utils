@@ -2,17 +2,7 @@
  * Core type definitions used throughout the AST utilities
  */
 
-import type * as ts from "typescript";
-
-// ===== CORE TYPES =====
-
-export type FunctionCallInfo<T = Record<string, unknown>> = {
-	functionName: string;
-	arguments: ts.NodeArray<ts.Expression>;
-	argumentValues: unknown[];
-	node: ts.CallExpression;
-	metadata?: T;
-};
+import type ts from "typescript";
 
 export type ExportInfo = {
 	exportType: "named" | "default" | "both" | "none";
@@ -35,25 +25,6 @@ export type VisitorContext<T = unknown> = {
 };
 
 export type GenericVisitor<TResult = void> = (node: ts.Node, context: VisitorContext) => TResult;
-
-// ===== SPECIALIZED TYPES =====
-
-export type ParameterizedFunctionCall = FunctionCallInfo & {
-	pathParameter?: string | null;
-	stringParameters: string[];
-	objectParameters: Record<string, unknown>[];
-};
-
-export type ChainedFunctionCall = FunctionCallInfo & {
-	chainedMethods: string[];
-	finalArguments: unknown[];
-};
-
-export type ConditionalFunctionCall = FunctionCallInfo & {
-	isConditional: boolean;
-	condition?: string;
-	isInExportContext: boolean;
-};
 
 export type ConfigurationObject = {
 	properties: Record<string, unknown>;

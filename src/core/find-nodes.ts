@@ -2,7 +2,7 @@
  * AST visitor utilities for traversing TypeScript AST nodes
  */
 
-import * as ts from "typescript";
+import ts from "typescript";
 
 /**
  * Find all nodes of a specific type

@@ -2,7 +2,7 @@
  * Node value extraction utilities for TypeScript AST nodes
  */
 
-import * as ts from "typescript";
+import ts from "typescript";
 
 /**
  * Extract literal value from a TypeScript node

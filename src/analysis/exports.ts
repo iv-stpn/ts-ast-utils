@@ -2,7 +2,7 @@
  * Export analysis utilities for TypeScript source files
  */
 
-import * as ts from "typescript";
+import ts from "typescript";
 import type { ExportInfo } from "../core/types";
 
 /**

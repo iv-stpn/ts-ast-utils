@@ -61,16 +61,11 @@ export {
 	createSourceFileFromContent,
 	createSourceFileFromPath,
 } from "./core/source-file";
-// ===== CORE UTILITIES =====
 // Type definitions
 export type {
-	ChainedFunctionCall,
-	ConditionalFunctionCall,
 	ConfigurationObject,
 	ExportInfo,
-	FunctionCallInfo,
 	GenericVisitor,
-	ParameterizedFunctionCall,
 	PropertyInfo,
 	VisitorContext,
 } from "./core/types";

@@ -5,7 +5,7 @@
 
 import { beforeAll, describe, expect, test } from "bun:test";
 import * as path from "node:path";
-import * as ts from "typescript";
+import ts from "typescript";
 import {
 	createSourceFileFromPath,
 	findNodes,

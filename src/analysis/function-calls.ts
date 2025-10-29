@@ -3,7 +3,7 @@
  * Provides focused utilities for extracting and analyzing function calls
  */
 
-import * as ts from "typescript";
+import ts from "typescript";
 
 /**
  * Result type for extracted function calls

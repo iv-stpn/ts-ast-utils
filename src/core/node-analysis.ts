@@ -2,7 +2,7 @@
  * Node type checking and analysis utilities
  */
 
-import * as ts from "typescript";
+import ts from "typescript";
 
 /**
  * Check if a function node is async

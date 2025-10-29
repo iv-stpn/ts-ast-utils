@@ -2,7 +2,7 @@
  * Position and location utilities for TypeScript AST nodes
  */
 
-import type * as ts from "typescript";
+import type ts from "typescript";
 
 /**
  * Get line number from TypeScript source file and position
