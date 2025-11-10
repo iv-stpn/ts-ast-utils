@@ -1,5 +1,11 @@
 # ts-ast-utils
 
+## 0.0.5
+
+### Patch Changes
+
+- a5bf686: add type utilities
+
 ## 0.0.4
 
 ### Patch Changes
