@@ -602,6 +602,11 @@ const variableName = "test";
 			expect(ts.isSourceFile(sourceFile)).toBe(true);
 		});
 
+		test("should throw error for non-existent file path", () => {
+			const nonExistentPath = "/non/existent/file.ts";
+			expect(() => createSourceFileFromPath(nonExistentPath)).toThrow();
+		});
+
 		test("should create source file from content string", () => {
 			const fileName = "test.ts";
 			const content = `

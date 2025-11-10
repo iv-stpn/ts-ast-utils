@@ -61,6 +61,21 @@ export {
 	createSourceFileFromContent,
 	createSourceFileFromPath,
 } from "./core/source-file";
+// Type utilities
+export {
+	areMapsWithRecordValuesEqual,
+	areRecordsEqual,
+	extractPropertiesFromObjectLiteral,
+	extractReturnTypeFromPromise,
+	findObjectProperty,
+	formatPropertyKey,
+	hasProperty,
+	inferTypeFromExpression,
+	isValidIdentifier,
+	parseObjectType,
+	resolveTypeAlias,
+	serializeTypeNode,
+} from "./core/type-utilities";
 // Type definitions
 export type {
 	ConfigurationObject,
