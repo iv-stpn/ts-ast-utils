@@ -1,5 +1,11 @@
 # ts-ast-utils
 
+## 0.0.6
+
+### Patch Changes
+
+- bbd260c: add isNodeAsync
+
 ## 0.0.5
 
 ### Patch Changes
