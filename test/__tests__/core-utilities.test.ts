@@ -28,6 +28,7 @@ import {
 	isDefaultExport,
 	isExported,
 	isInFunctionContext,
+	isNodeAsync,
 } from "../../src/index";
 
 describe("Core Utilities", () => {
@@ -131,6 +132,129 @@ describe("Core Utilities", () => {
 			// Test async arrow functions
 			const asyncArrowFunctions = arrowFunctions.filter(isAsyncFunction);
 			expect(asyncArrowFunctions.length).toBeGreaterThan(0);
+		});
+
+		test("should identify async nodes with isNodeAsync", () => {
+			// Test async function declarations
+			const functions = findNodes(sourceFile, ts.isFunctionDeclaration);
+			const asyncFunc = functions.find((fn) => fn.name && fn.name.text === "asyncFunction");
+			const regularFunc = functions.find((fn) => fn.name && fn.name.text === "regularFunction");
+
+			if (asyncFunc) {
+				expect(isNodeAsync(asyncFunc)).toBe(true);
+			}
+			if (regularFunc) {
+				expect(isNodeAsync(regularFunc)).toBe(false);
+			}
+
+			// Test async arrow functions
+			const arrowFunctions = findNodes(sourceFile, ts.isArrowFunction);
+			const asyncArrowFunctions = arrowFunctions.filter(isNodeAsync);
+			expect(asyncArrowFunctions.length).toBeGreaterThan(0);
+
+			// Test async method declarations
+			const methods = findNodes(sourceFile, ts.isMethodDeclaration);
+			const asyncMethods = methods.filter(isNodeAsync);
+			expect(asyncMethods.length).toBeGreaterThan(0);
+
+			// Verify specific async method
+			const asyncMethod = methods.find((m) => m.name && ts.isIdentifier(m.name) && m.name.text === "asyncMethod");
+			if (asyncMethod) {
+				expect(isNodeAsync(asyncMethod)).toBe(true);
+			}
+
+			// Test async generator functions
+			const asyncGenerators = findNodes(sourceFile, ts.isFunctionDeclaration).filter(
+				(fn) => fn.name && fn.name.text === "asyncGeneratorFunction",
+			);
+			if (asyncGenerators.length > 0) {
+				expect(isNodeAsync(asyncGenerators[0])).toBe(true);
+			}
+		});
+
+		test("should handle non-async nodes with isNodeAsync", () => {
+			// Test regular function declarations
+			const functions = findNodes(sourceFile, ts.isFunctionDeclaration);
+			const regularFunc = functions.find((fn) => fn.name && fn.name.text === "regularFunction");
+			if (regularFunc) {
+				expect(isNodeAsync(regularFunc)).toBe(false);
+			}
+
+			// Test regular arrow functions
+			const arrowFunctions = findNodes(sourceFile, ts.isArrowFunction);
+			const syncArrowFunctions = arrowFunctions.filter((af) => !isNodeAsync(af));
+			expect(syncArrowFunctions.length).toBeGreaterThan(0);
+
+			// Test non-function nodes
+			const classes = findNodes(sourceFile, ts.isClassDeclaration);
+			const variables = findNodes(sourceFile, ts.isVariableStatement);
+
+			// Should return false for non-function-like nodes
+			if (classes.length > 0) {
+				expect(isNodeAsync(classes[0])).toBe(false);
+			}
+			if (variables.length > 0) {
+				expect(isNodeAsync(variables[0])).toBe(false);
+			}
+		});
+
+		test("should test isNodeAsync with various function types", () => {
+			const content = `
+async function asyncFunc() {}
+function syncFunc() {}
+const asyncArrow = async () => {};
+const syncArrow = () => {};
+class TestClass {
+	async asyncMethod() {}
+	syncMethod() {}
+}
+interface TestInterface {
+	asyncMethod(): Promise<void>;
+	syncMethod(): void;
+}
+			`.trim();
+			const testFile = createSourceFileFromContent("test.ts", content);
+
+			// Test function declarations
+			const functions = findNodes(testFile, ts.isFunctionDeclaration);
+			const asyncFuncDecl = functions.find((f) => f.name?.text === "asyncFunc");
+			const syncFuncDecl = functions.find((f) => f.name?.text === "syncFunc");
+
+			if (asyncFuncDecl) {
+				expect(isNodeAsync(asyncFuncDecl)).toBe(true);
+			}
+			if (syncFuncDecl) {
+				expect(isNodeAsync(syncFuncDecl)).toBe(false);
+			}
+
+			// Test arrow functions
+			const arrowFunctions = findNodes(testFile, ts.isArrowFunction);
+			expect(arrowFunctions.length).toBe(2);
+			const asyncArrows = arrowFunctions.filter(isNodeAsync);
+			const syncArrows = arrowFunctions.filter((af) => !isNodeAsync(af));
+
+			expect(asyncArrows.length).toBe(1);
+			expect(syncArrows.length).toBe(1);
+
+			// Test method declarations
+			const methods = findNodes(testFile, ts.isMethodDeclaration);
+			expect(methods.length).toBe(2);
+			const asyncMethodDecl = methods.find((m) => ts.isIdentifier(m.name) && m.name.text === "asyncMethod");
+			const syncMethodDecl = methods.find((m) => ts.isIdentifier(m.name) && m.name.text === "syncMethod");
+
+			if (asyncMethodDecl) {
+				expect(isNodeAsync(asyncMethodDecl)).toBe(true);
+			}
+			if (syncMethodDecl) {
+				expect(isNodeAsync(syncMethodDecl)).toBe(false);
+			}
+
+			// Test method signatures (in interfaces)
+			const methodSignatures = findNodes(testFile, ts.isMethodSignature);
+			// Method signatures don't have async modifiers, so they should return false
+			methodSignatures.forEach((ms) => {
+				expect(isNodeAsync(ms)).toBe(false);
+			});
 		});
 
 		test("should analyze function expressions", () => {

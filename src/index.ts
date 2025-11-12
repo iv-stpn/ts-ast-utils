@@ -41,6 +41,7 @@ export {
 	isDefaultExport,
 	isExported,
 	isInFunctionContext,
+	isNodeAsync,
 } from "./core/node-analysis";
 // Node value extraction
 export {

@@ -123,3 +123,20 @@ export function isExported(node: ts.Node): boolean {
 export function isDefaultExport(node: ts.Node): boolean {
 	return hasModifier(node, ts.SyntaxKind.DefaultKeyword);
 }
+
+/**
+ * Check if a function-like node has async modifier
+ */
+export function isNodeAsync(node: ts.Node): boolean {
+	const hasAsyncModifier = (n: { modifiers?: ts.NodeArray<ts.ModifierLike> }) =>
+		n.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword) ?? false;
+
+	return (
+		(ts.isFunctionExpression(node) ||
+			ts.isArrowFunction(node) ||
+			ts.isFunctionDeclaration(node) ||
+			ts.isMethodSignature(node) ||
+			ts.isMethodDeclaration(node)) &&
+		hasAsyncModifier(node)
+	);
+}
