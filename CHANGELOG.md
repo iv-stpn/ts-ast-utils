@@ -1,5 +1,11 @@
 # ts-ast-utils
 
+## 0.0.7
+
+### Patch Changes
+
+- 0cde73e: add more utilities
+
 ## 0.0.6
 
 ### Patch Changes
