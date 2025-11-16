@@ -56,7 +56,7 @@ export const shorthandObj = { userId, userName };
 
 // Example: Method calls
 export const uppercaseString = "hello".toUpperCase();
-export const parsedNumber = Number.parseInt("42");
+export const parsedNumber = Number.parseInt("42", 10);
 export const randomValue = Math.random();
 
 // Example: Spread operator

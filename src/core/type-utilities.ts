@@ -602,3 +602,111 @@ export function isValidIdentifier(str: string): boolean {
 export function formatPropertyKey(key: string): string {
 	return isValidIdentifier(key) ? key : `"${key}"`;
 }
+
+/**
+ * Get type string from a TypeScript type using TypeChecker
+ * Handles union types and provides detailed type information
+ * @param type - The type to convert to string
+ * @param checker - TypeChecker instance for type analysis
+ * @returns String representation of the type
+ */
+export function getTypeString(type: ts.Type, checker: ts.TypeChecker): string {
+	// First try to handle unions manually if present
+	if (type.isUnion()) {
+		const unionTypes = type.types.map((t: ts.Type) => {
+			// Recursively get string for each union member
+			return getTypeStringInternal(t, checker);
+		});
+		// Filter out 'never' but keep 'undefined'
+		const filtered = unionTypes.filter((t: string) => t !== "never");
+		if (filtered.length > 1) {
+			return filtered.join(" | ");
+		}
+		if (filtered.length === 1 && filtered[0]) {
+			return filtered[0];
+		}
+	}
+
+	return getTypeStringInternal(type, checker);
+}
+
+/**
+ * Internal helper to convert a type to string using TypeChecker
+ * Uses NoTruncation and UseFullyQualifiedType flags for complete type information
+ * @param type - The type to convert
+ * @param checker - TypeChecker instance
+ * @returns String representation of the type
+ */
+function getTypeStringInternal(type: ts.Type, checker: ts.TypeChecker): string {
+	// Use NoTruncation and UseFullyQualifiedType flags for better type information
+	const typeString = checker.typeToString(
+		type,
+		undefined,
+		ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.UseFullyQualifiedType,
+	);
+
+	return typeString;
+}
+
+/**
+ * Extract properties from object type using TypeChecker
+ * Provides detailed type information for each property, handling edge cases
+ * like 'any' and empty object types
+ * @param type - The object type to extract properties from
+ * @param checker - TypeChecker instance for type analysis
+ * @returns Record mapping property names to their type strings
+ */
+export function extractPropertiesFromType(type: ts.Type, checker: ts.TypeChecker): Record<string, string> {
+	const result: Record<string, string> = {};
+	const properties = type.getProperties();
+
+	for (const prop of properties) {
+		// Get property symbol and then its type
+		const propSymbol = type.getProperty(prop.name);
+
+		if (!propSymbol) {
+			// Fallback to getting type from symbol location
+			if (!prop.valueDeclaration) continue;
+			const fallbackType = checker.getTypeOfSymbolAtLocation(prop, prop.valueDeclaration);
+			result[prop.name] = getTypeString(fallbackType, checker);
+			continue;
+		}
+
+		// Get type of the property from the containing type
+		const propType = checker.getTypeOfSymbol(propSymbol);
+		let typeString = getTypeString(propType, checker);
+
+		// If we get 'any', try to extract more specific type information
+		if (typeString === "any") {
+			// Try widened type first
+			const widenedType = checker.getWidenedType(propType);
+			const widenedString = checker.typeToString(widenedType, undefined, ts.TypeFormatFlags.NoTruncation);
+			if (widenedString !== "any") {
+				typeString = widenedString;
+			} else if (propType.isUnion()) {
+				// Check if it's a union type - extract non-any members
+				const unionParts: string[] = [];
+				for (const unionMember of propType.types) {
+					const memberString = checker.typeToString(unionMember, undefined, ts.TypeFormatFlags.NoTruncation);
+					if (memberString !== "any" && memberString !== "never") {
+						unionParts.push(memberString);
+					}
+				}
+				if (unionParts.length > 0) {
+					typeString = unionParts.join(" | ");
+				}
+			}
+		}
+
+		// If we get '{}' (empty object type), TypeScript couldn't infer the proper type
+		// from the expression. We'll convert it to 'any' to avoid breaking existing code
+		// that might assume a more specific type.
+		if (typeString === "{}") {
+			typeString = "any";
+		}
+
+		result[prop.name] = typeString;
+	}
+
+	return result;
+}
