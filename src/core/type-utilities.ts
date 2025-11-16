@@ -210,6 +210,52 @@ export function extractReturnTypeFromPromise(
 }
 
 /**
+ * Unwrap Promise<T> type to get T
+ * If the type is not a Promise, returns the type as-is
+ * @param type - The type to unwrap
+ * @param typeChecker - TypeChecker instance for type analysis
+ * @returns The unwrapped type
+ */
+export function unwrapPromiseType(type: ts.Type, typeChecker: ts.TypeChecker): ts.Type {
+	// Check if this is a type reference (e.g., Promise<T>)
+	if (type.flags & ts.TypeFlags.Object) {
+		const objectType = type as ts.ObjectType;
+
+		// Check if it's a reference to Promise
+		if (objectType.objectFlags & ts.ObjectFlags.Reference) {
+			const typeRef = objectType as ts.TypeReference;
+
+			// Get the target of the type reference to check if it's Promise
+			const target = typeRef.target || typeRef;
+			const symbol = target.symbol || typeRef.symbol || typeRef.aliasSymbol;
+
+			if (symbol && symbol.name === "Promise") {
+				// Use typeChecker to get type arguments
+				const typeArgs = typeChecker.getTypeArguments(typeRef);
+				if (typeArgs && typeArgs.length > 0) {
+					return typeArgs[0];
+				}
+			}
+		}
+	}
+
+	// If it's a union type (e.g., T | Promise<T>), try to unwrap Promise from union members
+	if (type.flags & ts.TypeFlags.Union) {
+		const unionType = type as ts.UnionType;
+		for (const memberType of unionType.types) {
+			// Try to unwrap each union member
+			const unwrapped = unwrapPromiseType(memberType, typeChecker);
+			// If we found a Promise, return its unwrapped type
+			if (unwrapped !== memberType) {
+				return unwrapped;
+			}
+		}
+	}
+
+	return type;
+}
+
+/**
  * Extract properties from an object literal expression
  * Infers types from the initializer expressions
  * @param objectLiteral - The object literal to extract from

@@ -140,3 +140,96 @@ export function isNodeAsync(node: ts.Node): boolean {
 		hasAsyncModifier(node)
 	);
 }
+
+// biome-ignore lint/suspicious/noTemplateCurlyInString: this is intentional
+const TEMPLATE_STRING_PLACEHOLDER = "${string}";
+
+/**
+ * Extract simple property name from a PropertyName node
+ */
+function extractPropertyName(name: ts.PropertyName): string | null {
+	if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name)) return name.text;
+	return null;
+}
+
+/**
+ * Extract property name from a PropertySignature node
+ */
+export function getPropertyName(name: ts.PropertyName): string | null {
+	const simpleName = extractPropertyName(name);
+	if (simpleName) return simpleName;
+
+	if (ts.isComputedPropertyName(name) && ts.isTemplateLiteralTypeNode(name.expression)) {
+		const templateLiteral = name.expression;
+		if (templateLiteral.head) {
+			let pattern = templateLiteral.head.text;
+			for (const span of templateLiteral.templateSpans) {
+				pattern += TEMPLATE_STRING_PLACEHOLDER;
+				if (span.literal) pattern += span.literal.text;
+			}
+			return pattern;
+		}
+	}
+	return null;
+}
+
+/**
+ * Generic helper to parse TypeScript interface declarations from generated types
+ */
+export function parseGeneratedInterfaces<T>(
+	content: string,
+	handlers: Record<
+		string,
+		(propName: string, member: ts.PropertySignature | ts.IndexSignatureDeclaration, results: T) => void
+	>,
+	results: T,
+): T {
+	try {
+		const sourceFile = ts.createSourceFile("types.d.ts", content, ts.ScriptTarget.Latest, true);
+
+		function visit(node: ts.Node): void {
+			if (ts.isInterfaceDeclaration(node)) {
+				const interfaceName = node.name.text;
+				const handler = handlers[interfaceName];
+
+				if (handler) {
+					for (const member of node.members) {
+						let propName: string | null = null;
+
+						// Handle property signatures
+						if (ts.isPropertySignature(member)) {
+							propName = getPropertyName(member.name);
+						}
+						// Handle index signatures with template literal types
+						else if (ts.isIndexSignatureDeclaration(member)) {
+							const param = member.parameters[0];
+							if (param?.type && ts.isTemplateLiteralTypeNode(param.type)) {
+								const templateLiteral = param.type;
+								if (templateLiteral.head) {
+									let pattern = templateLiteral.head.text;
+									for (const span of templateLiteral.templateSpans) {
+										pattern += TEMPLATE_STRING_PLACEHOLDER;
+										if (span.literal) {
+											pattern += span.literal.text;
+										}
+									}
+									propName = pattern;
+								}
+							}
+						}
+
+						if (propName) handler(propName, member as ts.PropertySignature | ts.IndexSignatureDeclaration, results);
+					}
+				}
+			}
+
+			ts.forEachChild(node, visit);
+		}
+
+		visit(sourceFile);
+	} catch (error) {
+		console.warn(`Warning: Could not parse generated types with AST: ${error}`);
+	}
+
+	return results;
+}

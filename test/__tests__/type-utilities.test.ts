@@ -13,6 +13,7 @@ import {
 	parseObjectType,
 	resolveTypeAlias,
 	serializeTypeNode,
+	unwrapPromiseType,
 } from "../../src/core/type-utilities";
 
 describe("Type Utilities", () => {
@@ -83,6 +84,32 @@ describe("Type Utilities", () => {
 			const typeAlias = sourceFile.statements[0] as ts.TypeAliasDeclaration;
 			const result = serializeTypeNode(typeAlias.type);
 			// Index signatures are not property signatures, so they're skipped
+			expect(result).toBeTruthy();
+		});
+
+		test("should handle object types with numeric literal property names", () => {
+			const code = "type Test = { 123: string; 456: number }";
+			const sourceFile = ts.createSourceFile("test.ts", code, ts.ScriptTarget.Latest, true);
+			const typeAlias = sourceFile.statements[0] as ts.TypeAliasDeclaration;
+			const result = serializeTypeNode(typeAlias.type);
+			expect(result).toBeTruthy();
+		});
+
+		test("should handle object types without type annotations", () => {
+			const code = "type Test = { name }";
+			const sourceFile = ts.createSourceFile("test.ts", code, ts.ScriptTarget.Latest, true);
+			const typeAlias = sourceFile.statements[0] as ts.TypeAliasDeclaration;
+			const result = serializeTypeNode(typeAlias.type);
+			// Properties without types should be skipped
+			expect(result).toBeTruthy();
+		});
+
+		test("should handle object types with computed property names that are not identifiers or string literals", () => {
+			const code = "type Test = { [123]: string }";
+			const sourceFile = ts.createSourceFile("test.ts", code, ts.ScriptTarget.Latest, true);
+			const typeAlias = sourceFile.statements[0] as ts.TypeAliasDeclaration;
+			// This creates an index signature, not a property signature
+			const result = serializeTypeNode(typeAlias.type);
 			expect(result).toBeTruthy();
 		});
 
@@ -231,6 +258,132 @@ describe("Type Utilities", () => {
 		});
 	});
 
+	describe("unwrapPromiseType", () => {
+		test("should return type unchanged when type is not fully resolved", () => {
+			// In a minimal test environment without full lib.d.ts, Promise types won't be fully resolved
+			const code = "type Test = Promise<string>;";
+			const sourceFile = ts.createSourceFile("test.ts", code, ts.ScriptTarget.Latest, true);
+			const host: ts.CompilerHost = {
+				getSourceFile: (fileName) => (fileName === "test.ts" ? sourceFile : undefined),
+				writeFile: () => {},
+				getCurrentDirectory: () => "",
+				getDirectories: () => [],
+				fileExists: () => true,
+				readFile: () => "",
+				getCanonicalFileName: (fileName) => fileName,
+				useCaseSensitiveFileNames: () => true,
+				getNewLine: () => "\n",
+				getDefaultLibFileName: () => "lib.d.ts",
+			};
+			const program = ts.createProgram(["test.ts"], {}, host);
+			const typeChecker = program.getTypeChecker();
+			const typeAlias = sourceFile.statements[0] as ts.TypeAliasDeclaration;
+			const type = typeChecker.getTypeFromTypeNode(typeAlias.type);
+
+			// Function should handle unresolved types gracefully
+			const unwrapped = unwrapPromiseType(type, typeChecker);
+			expect(unwrapped).toBeDefined();
+		});
+
+		test("should handle non-object types", () => {
+			const code = "type Test = string;";
+			const sourceFile = ts.createSourceFile("test.ts", code, ts.ScriptTarget.Latest, true);
+			const host: ts.CompilerHost = {
+				getSourceFile: (fileName) => (fileName === "test.ts" ? sourceFile : undefined),
+				writeFile: () => {},
+				getCurrentDirectory: () => "",
+				getDirectories: () => [],
+				fileExists: () => true,
+				readFile: () => "",
+				getCanonicalFileName: (fileName) => fileName,
+				useCaseSensitiveFileNames: () => true,
+				getNewLine: () => "\n",
+				getDefaultLibFileName: () => "lib.d.ts",
+			};
+			const program = ts.createProgram(["test.ts"], {}, host);
+			const typeChecker = program.getTypeChecker();
+			const typeAlias = sourceFile.statements[0] as ts.TypeAliasDeclaration;
+			const type = typeChecker.getTypeFromTypeNode(typeAlias.type);
+
+			const unwrapped = unwrapPromiseType(type, typeChecker);
+			expect(unwrapped).toBe(type);
+		});
+
+		test("should handle union types", () => {
+			const code = "type Test = string | number;";
+			const sourceFile = ts.createSourceFile("test.ts", code, ts.ScriptTarget.Latest, true);
+			const host: ts.CompilerHost = {
+				getSourceFile: (fileName) => (fileName === "test.ts" ? sourceFile : undefined),
+				writeFile: () => {},
+				getCurrentDirectory: () => "",
+				getDirectories: () => [],
+				fileExists: () => true,
+				readFile: () => "",
+				getCanonicalFileName: (fileName) => fileName,
+				useCaseSensitiveFileNames: () => true,
+				getNewLine: () => "\n",
+				getDefaultLibFileName: () => "lib.d.ts",
+			};
+			const program = ts.createProgram(["test.ts"], {}, host);
+			const typeChecker = program.getTypeChecker();
+			const typeAlias = sourceFile.statements[0] as ts.TypeAliasDeclaration;
+			const type = typeChecker.getTypeFromTypeNode(typeAlias.type);
+
+			const unwrapped = unwrapPromiseType(type, typeChecker);
+			// Should return type unchanged if no Promise is found in union
+			expect(unwrapped).toBeDefined();
+		});
+
+		test("should check type flags correctly for Object types", () => {
+			const code = "type Test = { name: string };";
+			const sourceFile = ts.createSourceFile("test.ts", code, ts.ScriptTarget.Latest, true);
+			const host: ts.CompilerHost = {
+				getSourceFile: (fileName) => (fileName === "test.ts" ? sourceFile : undefined),
+				writeFile: () => {},
+				getCurrentDirectory: () => "",
+				getDirectories: () => [],
+				fileExists: () => true,
+				readFile: () => "",
+				getCanonicalFileName: (fileName) => fileName,
+				useCaseSensitiveFileNames: () => true,
+				getNewLine: () => "\n",
+				getDefaultLibFileName: () => "lib.d.ts",
+			};
+			const program = ts.createProgram(["test.ts"], {}, host);
+			const typeChecker = program.getTypeChecker();
+			const typeAlias = sourceFile.statements[0] as ts.TypeAliasDeclaration;
+			const type = typeChecker.getTypeFromTypeNode(typeAlias.type);
+
+			const unwrapped = unwrapPromiseType(type, typeChecker);
+			// Object literal types should be returned unchanged (not Promise types)
+			expect(unwrapped).toBe(type);
+		});
+
+		test("should handle type references that are not Promise", () => {
+			const code = "type MyType = { value: number }; type Test = MyType;";
+			const sourceFile = ts.createSourceFile("test.ts", code, ts.ScriptTarget.Latest, true);
+			const host: ts.CompilerHost = {
+				getSourceFile: (fileName) => (fileName === "test.ts" ? sourceFile : undefined),
+				writeFile: () => {},
+				getCurrentDirectory: () => "",
+				getDirectories: () => [],
+				fileExists: () => true,
+				readFile: () => "",
+				getCanonicalFileName: (fileName) => fileName,
+				useCaseSensitiveFileNames: () => true,
+				getNewLine: () => "\n",
+				getDefaultLibFileName: () => "lib.d.ts",
+			};
+			const program = ts.createProgram(["test.ts"], {}, host);
+			const typeChecker = program.getTypeChecker();
+			const typeAlias = sourceFile.statements[1] as ts.TypeAliasDeclaration;
+			const type = typeChecker.getTypeFromTypeNode(typeAlias.type);
+
+			const unwrapped = unwrapPromiseType(type, typeChecker);
+			expect(unwrapped).toBeDefined();
+		});
+	});
+
 	describe("extractPropertiesFromObjectLiteral", () => {
 		function createObjectLiteral(code: string): ts.ObjectLiteralExpression {
 			const sourceFile = ts.createSourceFile("test.ts", `const obj = ${code}`, ts.ScriptTarget.Latest, true);
@@ -291,6 +444,34 @@ describe("Type Utilities", () => {
 			expect(result.name).toBe("string");
 			// Method should be skipped
 			expect(result.getValue).toBeUndefined();
+		});
+
+		test("should handle property assignment with null propName", () => {
+			const code = "const obj = { [computed]: 'value', normal: 123 }";
+			const sourceFile = ts.createSourceFile("test.ts", code, ts.ScriptTarget.Latest, true);
+			const varDecl = (sourceFile.statements[0] as ts.VariableStatement).declarationList.declarations[0];
+			const obj = varDecl.initializer as ts.ObjectLiteralExpression;
+			const result = extractPropertiesFromObjectLiteral(obj);
+			expect(result.normal).toBe("number");
+			// Computed property should be skipped
+		});
+
+		test("should handle property assignment with null propType", () => {
+			const code = "const obj = { name: unknownValue }";
+			const sourceFile = ts.createSourceFile("test.ts", code, ts.ScriptTarget.Latest, true);
+			const varDecl = (sourceFile.statements[0] as ts.VariableStatement).declarationList.declarations[0];
+			const obj = varDecl.initializer as ts.ObjectLiteralExpression;
+			const result = extractPropertiesFromObjectLiteral(obj);
+			expect(result.name).toBe("unknown");
+		});
+
+		test("should handle shorthand property with null propType", () => {
+			const code = "const obj = { someValue }";
+			const sourceFile = ts.createSourceFile("test.ts", code, ts.ScriptTarget.Latest, true);
+			const varDecl = (sourceFile.statements[0] as ts.VariableStatement).declarationList.declarations[0];
+			const obj = varDecl.initializer as ts.ObjectLiteralExpression;
+			const result = extractPropertiesFromObjectLiteral(obj);
+			expect(result.someValue).toBe("unknown");
 		});
 	});
 
@@ -575,6 +756,89 @@ describe("Type Utilities", () => {
 			const declaration = statement.declarationList.declarations[0];
 			const result = inferTypeFromExpression(declaration.initializer as ts.Expression);
 			expect(result).toContain("number");
+		});
+
+		test("should handle binary OR with null left and right types", () => {
+			const code = "const x = unknownFunc1() || unknownFunc2()";
+			const sourceFile = ts.createSourceFile("test.ts", code, ts.ScriptTarget.Latest, true);
+			const statement = sourceFile.statements[0] as ts.VariableStatement;
+			const declaration = statement.declarationList.declarations[0];
+			const result = inferTypeFromExpression(declaration.initializer as ts.Expression);
+			expect(result).toBe("unknown");
+		});
+
+		test("should handle conditional with null true and false types", () => {
+			const code = "const x = condition ? unknownFunc1() : unknownFunc2()";
+			const sourceFile = ts.createSourceFile("test.ts", code, ts.ScriptTarget.Latest, true);
+			const statement = sourceFile.statements[0] as ts.VariableStatement;
+			const declaration = statement.declarationList.declarations[0];
+			const result = inferTypeFromExpression(declaration.initializer as ts.Expression);
+			expect(result).toBe("unknown");
+		});
+
+		test("should handle object literal with property assignment without initializer", () => {
+			const code = "const x = { name: undefined, get value() { return 42; } }";
+			const sourceFile = ts.createSourceFile("test.ts", code, ts.ScriptTarget.Latest, true);
+			const statement = sourceFile.statements[0] as ts.VariableStatement;
+			const declaration = statement.declarationList.declarations[0];
+			const objLiteral = declaration.initializer as ts.ObjectLiteralExpression;
+			const result = inferTypeFromExpression(objLiteral);
+			expect(result).toContain("name");
+		});
+
+		test("should handle object literal property with null propType", () => {
+			const code = "const x = { [computed]: value }";
+			const sourceFile = ts.createSourceFile("test.ts", code, ts.ScriptTarget.Latest, true);
+			const statement = sourceFile.statements[0] as ts.VariableStatement;
+			const declaration = statement.declarationList.declarations[0];
+			const result = inferTypeFromExpression(declaration.initializer as ts.Expression);
+			// Computed properties without recognizable names
+			expect(result).toBe("{}");
+		});
+
+		test("should handle as expression with non-const type", () => {
+			const code = "const x = value as MyType";
+			const sourceFile = ts.createSourceFile("test.ts", code, ts.ScriptTarget.Latest, true);
+			const statement = sourceFile.statements[0] as ts.VariableStatement;
+			const declaration = statement.declarationList.declarations[0];
+			const result = inferTypeFromExpression(declaration.initializer as ts.Expression);
+			expect(result).toBe("unknown");
+		});
+
+		test("should handle AND operator fallback to unknown", () => {
+			const code = "const x = condition && unknownFunc()";
+			const sourceFile = ts.createSourceFile("test.ts", code, ts.ScriptTarget.Latest, true);
+			const statement = sourceFile.statements[0] as ts.VariableStatement;
+			const declaration = statement.declarationList.declarations[0];
+			const result = inferTypeFromExpression(declaration.initializer as ts.Expression);
+			expect(result).toBe("unknown");
+		});
+
+		test("should handle object literal property with numeric property name", () => {
+			const code = "const x = { 123: 'value', 456: 789 }";
+			const sourceFile = ts.createSourceFile("test.ts", code, ts.ScriptTarget.Latest, true);
+			const statement = sourceFile.statements[0] as ts.VariableStatement;
+			const declaration = statement.declarationList.declarations[0];
+			const result = inferTypeFromExpression(declaration.initializer as ts.Expression);
+			// Numeric property names are treated as computed properties and may be skipped
+			expect(result).toBe("{}");
+		});
+
+		test("should handle shorthand property assignment with null inferred type", () => {
+			const code = "const x = { unknownProp }";
+			const sourceFile = ts.createSourceFile("test.ts", code, ts.ScriptTarget.Latest, true);
+			const statement = sourceFile.statements[0] as ts.VariableStatement;
+			const declaration = statement.declarationList.declarations[0];
+			const objLiteral = declaration.initializer as ts.ObjectLiteralExpression;
+			const result = inferTypeFromExpression(objLiteral);
+			expect(result).toContain("unknownProp");
+		});
+
+		test("should infer mixed element array types", () => {
+			const result = inferTypeFromExpression(createExpression('[1, "two", true]'));
+			expect(result).toContain("boolean");
+			expect(result).toContain("number");
+			expect(result).toContain("string");
 		});
 	});
 

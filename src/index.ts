@@ -35,6 +35,7 @@ export {
 	getDeclarationName,
 	getNodeComments,
 	getNodeText,
+	getPropertyName,
 	hasExportModifier,
 	hasModifier,
 	isAsyncFunction,
@@ -42,6 +43,7 @@ export {
 	isExported,
 	isInFunctionContext,
 	isNodeAsync,
+	parseGeneratedInterfaces,
 } from "./core/node-analysis";
 // Node value extraction
 export {
@@ -76,6 +78,7 @@ export {
 	parseObjectType,
 	resolveTypeAlias,
 	serializeTypeNode,
+	unwrapPromiseType,
 } from "./core/type-utilities";
 // Type definitions
 export type {
