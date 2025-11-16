@@ -1,5 +1,11 @@
 # ts-ast-utils
 
+## 0.0.8
+
+### Patch Changes
+
+- b1794c4: add extractPropertiesFromType
+
 ## 0.0.7
 
 ### Patch Changes
