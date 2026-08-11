@@ -168,6 +168,8 @@ jobs:
       - name: Build Package
         run: bun run build
 
+      - name: Upgrade npm (OIDC trusted publishing requires npm >= 11.15)
+        run: npm install -g npm@latest
       - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@v1
@@ -178,7 +180,7 @@ jobs:
           publish: bun run release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"
 
       - name: Notify on publish
         if: steps.changesets.outputs.published == 'true'
