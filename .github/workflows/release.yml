@@ -169,7 +169,7 @@ jobs:
         run: bun run build
 
       - name: Upgrade npm (OIDC trusted publishing requires npm >= 11.15)
-        run: npm install -g npm@latest
+        run: npm install -g npm@11
       - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@v1
